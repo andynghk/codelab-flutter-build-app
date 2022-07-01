@@ -11,6 +11,12 @@ void main() {
  * Use StatefulWidget
  */
 
+/**
+ * Part 2: Write Your First Flutter App
+ * Create list
+ * Create Appbar
+ */
+
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -18,24 +24,34 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final wordPair = WordPair.random();
 
+    // return MaterialApp(
+    //   title: 'Welcome to Flutter',
+    //   home: Scaffold(
+    //     appBar: AppBar(
+    //       title: const Text('Welcome to Flutter'),
+    //     ),
+    //     // body: const Center(
+    //     //   child: Text('Hello World'),
+    //     // ),
+
+    //     // body: Center(
+    //     //   child: Text(wordPair.asPascalCase),
+    //     // ),
+
+    //     body: const Center(
+    //       child: RandomWords(),
+    //     ),
+    //   ),
+    // );
+
     return MaterialApp(
-      title: 'Welcome to Flutter',
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Welcome to Flutter'),
-        ),
-        // body: const Center(
-        //   child: Text('Hello World'),
-        // ),
-
-        // body: Center(
-        //   child: Text(wordPair.asPascalCase),
-        // ),
-
-        body: const Center(
-          child: RandomWords(),
-        ),
-      ),
+      title: 'Startup Name Generator',
+      theme: ThemeData(
+          appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+      )),
+      home: const RandomWords(),
     );
   }
 }
@@ -48,11 +64,94 @@ class RandomWords extends StatefulWidget {
 }
 
 class _RandomWordsState extends State<RandomWords> {
+  final wordPair = WordPair.random();
+
+  final _suggestions = <WordPair>[];
+  final _saved = <WordPair>[];
+  final _biggerFont = TextStyle(fontSize: 18);
+
   @override
   Widget build(BuildContext context) {
-    final wordPair = WordPair.random();
+    // return Text(wordPair.asPascalCase);
 
-    return Text(wordPair.asPascalCase);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Startup Name Generator'), actions: [
+        IconButton(
+          onPressed: _pushSaved,
+          icon: const Icon(Icons.list),
+          tooltip: 'Saved Suggestions',
+        ),
+      ]),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemBuilder: /*1*/ (context, i) {
+          if (i.isOdd) return const Divider(); /*2*/
+
+          final index = i ~/ 2; /*3*/
+          if (index >= _suggestions.length) {
+            _suggestions.addAll(generateWordPairs().take(10)); /*4*/
+          }
+
+          final alreadySaved = _saved.contains(_suggestions[index]);
+
+          // #docregion listTile
+          return ListTile(
+            title: Text(
+              _suggestions[index].asPascalCase,
+              style: _biggerFont,
+            ),
+            trailing: Icon(
+              alreadySaved ? Icons.favorite : Icons.favorite_border,
+              color: alreadySaved ? Colors.red : null,
+              semanticLabel: alreadySaved ? 'Remove from saved' : 'Save',
+            ),
+            onTap: () {
+              setState(() {
+                if (alreadySaved) {
+                  _saved.remove(_suggestions[index]);
+                } else {
+                  _saved.add(_suggestions[index]);
+                }
+              });
+            },
+          );
+          // #enddocregion listTile
+        },
+      ),
+    );
+  }
+
+  void _pushSaved() {
+    Navigator.of(context).push(
+      // Add lines from here...
+      MaterialPageRoute<void>(
+        builder: (context) {
+          final tiles = _saved.map(
+            (pair) {
+              return ListTile(
+                title: Text(
+                  pair.asPascalCase,
+                  style: _biggerFont,
+                ),
+              );
+            },
+          );
+          final divided = tiles.isNotEmpty
+              ? ListTile.divideTiles(
+                  context: context,
+                  tiles: tiles,
+                ).toList()
+              : <Widget>[];
+
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Saved Suggestions'),
+            ),
+            body: ListView(children: divided),
+          );
+        },
+      ),
+    );
   }
 }
 
